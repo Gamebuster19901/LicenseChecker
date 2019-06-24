@@ -1,9 +1,10 @@
 package com.gamebuster19901.license;
 
-import java.io.File;
 import java.nio.file.FileSystems;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+
+import com.google.gson.Gson;
 
 public class LicenseChecker {
 
@@ -14,11 +15,8 @@ public class LicenseChecker {
 				path = FileSystems.getDefault().getPath(args[0]).toAbsolutePath();
 			}
 			
-			File dir = path.toFile();
-			for(File f : dir.listFiles()) {
-				//TODO: check licenses
-			}
 		}
+		Gson gson = null;
 		catch(LicenseException e) {
 			e.printStackTrace();
 			System.exit(2);
