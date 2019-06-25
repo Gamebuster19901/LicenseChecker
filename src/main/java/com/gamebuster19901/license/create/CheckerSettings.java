@@ -3,7 +3,7 @@ package com.gamebuster19901.license.create;
 import java.util.HashMap;
 import java.util.Map.Entry;
 
-public class CheckerSettings {
+public final class CheckerSettings {
 	
 	private HashMap<String, String> extensions = new HashMap<String, String>();
 	private HashMap<String, HeaderMode> modes = new HashMap<String, HeaderMode>();
@@ -97,6 +97,30 @@ public class CheckerSettings {
 		currentExtension = null;
 		currentMessage = null;
 		currentMode = null;
+	}
+	
+	public void validate() throws Exception{
+		if(extensions.isEmpty()) {
+			throw new IllegalStateException("no extensions specified in checker");
+		}
+		if(modes.isEmpty()) {
+			throw new IllegalStateException("no modes specified in checker");
+		}
+		if(extensions.size() != modes.size()) {
+			throw new IllegalStateException("extensions.size() != modes.size()");
+		}
+		if(currentExtension != null || currentMessage != null || currentMode != null) {
+			throw new IllegalStateException("Transient fields were somehow set!");
+		}
+		
+		for(String s : extensions.keySet()) {
+			if(!s.startsWith(".")) {
+				throw new IllegalStateException("Extension '" + s + "' does not start with '.'");
+			}
+			if(modes.get(s) == null) {
+				throw new NullPointerException("Mode for '" + s + "' is null");
+			}
+		}
 	}
 	
 }
