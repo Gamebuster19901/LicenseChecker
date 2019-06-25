@@ -12,7 +12,7 @@ public class Export extends Command{
 	public static final File EXPORT_LOCATION;
 	static{
 		try {
-			EXPORT_LOCATION = new File(new File(Export.class.getProtectionDomain().getCodeSource().getLocation().toURI()).getParentFile().toString() + "/run/exports/licenses.json");
+			EXPORT_LOCATION = new File(new File(Export.class.getProtectionDomain().getCodeSource().getLocation().toURI()).toString() + "/licenses.json");
 		} catch (URISyntaxException e) {
 			throw new AssertionError(e);
 		}
