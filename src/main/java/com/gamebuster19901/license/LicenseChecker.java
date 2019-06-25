@@ -17,6 +17,10 @@ public class LicenseChecker {
 	public static void main(String[] args) {
 		try {
 			String path = Paths.get(LicenseChecker.class.getProtectionDomain().getCodeSource().getLocation().toURI()).toString();
+			if(path.endsWith(".jar")) {
+				File dir = new File(path);
+				path = dir.getParent();
+			}
 			if(args.length == 1) {
 				path = FileSystems.getDefault().getPath(args[0]).toAbsolutePath().toString();
 			}
@@ -65,6 +69,7 @@ public class LicenseChecker {
 			t.printStackTrace();
 			System.exit(3);
 		}
+		System.out.println("Everything looks good!");
 	}
 	
 	private static CheckerSettings validateLicenseJson(File file) throws Exception {
