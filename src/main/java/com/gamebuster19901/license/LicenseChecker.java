@@ -36,21 +36,26 @@ public class LicenseChecker {
 				HashSet<File> badFiles = new HashSet<File>();
 				
 				for(File f : Files.fileTreeTraverser().breadthFirstTraversal(dir)) {
-					if(settings.hasExtension("." + Files.getFileExtension(f.getName()))){
-						String extension = "." + Files.getFileExtension(f.getName());
-						byte[] header = settings.getMessage(extension).getBytes();
-						byte[] fileHeader = new byte[header.length];
-						Files.asByteSource(f).openStream().read(fileHeader, 0, header.length);
-						if(Arrays.equals(header, fileHeader)) {
-							System.out.println(f + " looks good");
+					if(settings.isIncluded(f)) {
+						if(settings.hasExtension("." + Files.getFileExtension(f.getName()))){
+							String extension = "." + Files.getFileExtension(f.getName());
+							byte[] header = settings.getMessage(extension).getBytes();
+							byte[] fileHeader = new byte[header.length];
+							Files.asByteSource(f).openStream().read(fileHeader, 0, header.length);
+							if(Arrays.equals(header, fileHeader)) {
+								System.out.println(f + " looks good");
+							}
+							else{
+								System.out.println(f + " is missing or has an incorrect license");
+								badFiles.add(f);
+							}
 						}
-						else{
-							System.out.println(f + " is missing or has an incorrect license");
-							badFiles.add(f);
+						else {
+							System.out.println("Skipping " + f);
 						}
 					}
 					else {
-						System.out.println("Skipping " + f);
+						System.out.println("Ignoring excluded file " + f);
 					}
 				}
 				if(badFiles.size() > 0) {

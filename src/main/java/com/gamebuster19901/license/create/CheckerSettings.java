@@ -1,16 +1,35 @@
 package com.gamebuster19901.license.create;
 
+import java.io.File;
+import java.net.URISyntaxException;
+import java.nio.file.Paths;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map.Entry;
 
 public final class CheckerSettings {
 	
 	private HashMap<String, String> extensions = new HashMap<String, String>();
 	private HashMap<String, HeaderMode> modes = new HashMap<String, HeaderMode>();
+	private HashSet<String> excludePaths = new HashSet<String>();
 	
+	transient final File CURRENT_DIRECTORY; 
 	transient String currentExtension = null;
 	transient String currentMessage = null;
 	transient HeaderMode currentMode = null;
+	
+	{
+		try {
+			String path = Paths.get(CheckerSettings.class.getProtectionDomain().getCodeSource().getLocation().toURI()).toString();
+			if(path.endsWith(".jar")) {
+				File dir = new File(path);
+				path = dir.getParent();
+			}
+			CURRENT_DIRECTORY = new File(path);
+		} catch (URISyntaxException e) {
+			throw new AssertionError(e);
+		}
+	}
 	
 	public CheckerSettings() {}
 	
@@ -46,6 +65,23 @@ public final class CheckerSettings {
 		else {
 			currentMessage += message + "\n";
 		}
+	}
+	
+	public void addExclusion(String path) {
+		excludePaths.add(path);
+	}
+	
+	public void removeExclusion(String path) {
+		excludePaths.remove(path);
+	}
+	
+	public boolean isIncluded(File f) {
+		for(String excluded : excludePaths) {
+			if(f.getAbsolutePath().contains(excluded)) {
+				return false;
+			}
+		}
+		return true;
 	}
 	
 	public void finishExtension() {

@@ -18,6 +18,8 @@ public abstract class Command implements Comparable{
 		new Edit();
 		new Undo();
 		new SetMode();
+		new Exclude();
+		new ExcludeRemove();
 	}
 	
 	public final String command;
