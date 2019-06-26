@@ -134,6 +134,10 @@ public class LicenseChecker {
 						else if (mode.is(JSON)) {
 							headerBytes = LICENSES.get(extension);
 							fileBytes = new byte[headerBytes.length + (int)f.length()];
+							if(fileBytes.length < 2) {
+								fileBytes = new byte[2];
+								System.err.println("The file output was less than 2 bytes, a JSON file must be at least 2 bytes, manually setting the length to 2!");
+							}
 							fileBytes[0] = '{';
 							fileBytes[1] = '\n';
 							for(int i = 2; i < headerBytes.length; i++) {
