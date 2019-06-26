@@ -1,5 +1,7 @@
 package com.gamebuster19901.license;
 
+import static com.gamebuster19901.license.create.HeaderMode.*;
+
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.nio.charset.Charset;
@@ -11,7 +13,6 @@ import java.util.HashSet;
 import java.util.Iterator;
 
 import com.gamebuster19901.license.create.CheckerSettings;
-import static com.gamebuster19901.license.create.HeaderMode.*;
 import com.gamebuster19901.license.create.HeaderModes;
 import com.google.common.io.Files;
 import com.google.gson.Gson;

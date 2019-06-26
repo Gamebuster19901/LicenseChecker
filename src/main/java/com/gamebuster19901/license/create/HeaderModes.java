@@ -1,8 +1,9 @@
 package com.gamebuster19901.license.create;
 
+import static com.gamebuster19901.license.create.HeaderMode.*;
+
 import java.util.ArrayList;
 import java.util.Iterator;
-import static com.gamebuster19901.license.create.HeaderMode.*;
 
 public class HeaderModes {
 
