@@ -37,12 +37,12 @@ public class LicenseChecker {
 			}
 			File dir = new File(path);
 			
-			System.out.println("Looking for licenses.json...");
+			System.out.println("Looking for licenses.json...\n");
 			File licensesJSON = new File(path + "/licenses.json");
 			if(licensesJSON.exists()) {
-				System.out.println("Found licences.json");
+				System.out.println("Found licences.json\n");
 				CheckerSettings settings = validateLicenseJson(licensesJSON);
-				System.out.println("Checking for license violations in: " + path);
+				System.out.println("Checking for license violations in: " + path + "\n");
 				
 				HashSet<File> badFiles = new HashSet<File>();
 				
@@ -57,7 +57,7 @@ public class LicenseChecker {
 								System.out.println(f + " looks good");
 							}
 							else{
-								System.out.println(f + " is missing or has an incorrect license");
+								System.err.println(f + " is missing or has an incorrect license");
 								badFiles.add(f);
 							}
 						}
@@ -70,14 +70,14 @@ public class LicenseChecker {
 					}
 				}
 				if(!silentSkips) {
-					System.out.println("\nNote: Skipped the following directories/files:\n");
+					System.out.println("\nNote: Excluded the following directories/files:\n");
 					for(String s : settings.getExclusions()) {
 						System.out.println(new File(s).getAbsolutePath());
 					}
-					System.out.println();
 				}
 				if(badFiles.size() > 0) {
-					throw new LicenseException(badFiles, "The following files have incorrect licensing");
+					System.err.println();
+					throw new LicenseException(badFiles, "The following files have incorrect licensing:\n");
 				}
 			}
 			else {
@@ -85,25 +85,25 @@ public class LicenseChecker {
 			}
 		}
 		catch(LicenseException e) {
-			e.printStackTrace();
+			e.printStackTrace(System.err);
 			System.exit(2);
 		}
 		catch(Throwable t) {
-			t.printStackTrace();
+			t.printStackTrace(System.err);
 			System.exit(3);
 		}
-		System.out.println("Everything looks good!");
+		System.out.println("Everything looks good!\n");
 	}
 	
 	private static CheckerSettings validateLicenseJson(File file) throws Exception {
-		System.out.println("Validiating licenses.json...");
+		System.out.println("Validiating licenses.json...\n");
 		String json = Files.asCharSource(file, Charset.defaultCharset()).read();
 		Gson gson = new Gson();
 		CheckerSettings settings = gson.fromJson(json, CheckerSettings.class);
 		settings.validate();
-		System.out.println("Licenses.json looks good");
+		System.out.println("Licenses.json looks good\n");
 		System.out.println("Found the following extensions: ");
-		System.out.println(Arrays.toString(settings.getExtensions()));
+		System.out.println(Arrays.toString(settings.getExtensions()) + "\n");
 		return settings;
 	}
 	
