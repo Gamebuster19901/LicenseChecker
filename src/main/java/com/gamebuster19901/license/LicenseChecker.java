@@ -119,11 +119,29 @@ public class LicenseChecker {
 				}
 				if(applyLicenses) {
 					for(File f : badFiles) {
+						String extension = "." + Files.getFileExtension(f.getAbsolutePath());
 						System.out.println("adding license header to " + f);
-						byte[] headerBytes = LICENSES.get("." + Files.getFileExtension(f.getAbsolutePath()));
-						byte[] fileBytes = new byte[headerBytes.length + (int)f.length()];
-						for(int i = 0; i < headerBytes.length; i++) {
-							fileBytes[i] = headerBytes[i];
+						byte[] headerBytes;
+						byte[] fileBytes;
+						HeaderModes mode = settings.getMode(extension);
+						if(mode.is(APPEND)){
+							headerBytes = LICENSES.get(extension);
+							fileBytes = new byte[headerBytes.length + (int)f.length()];
+							for(int i = 0; i < headerBytes.length; i++) {
+								fileBytes[i] = headerBytes[i];
+							}
+						}
+						else if (mode.is(JSON)) {
+							headerBytes = LICENSES.get(extension);
+							fileBytes = new byte[headerBytes.length + (int)f.length()];
+							fileBytes[0] = '{';
+							fileBytes[1] = '\n';
+							for(int i = 2; i < headerBytes.length; i++) {
+								fileBytes[i] = headerBytes[i];
+							}
+						}
+						else {
+							throw new AssertionError();
 						}
 						Files.asByteSource(f).openStream().read(fileBytes, headerBytes.length, (int)f.length());
 						Files.asByteSink(f).write(fileBytes);
