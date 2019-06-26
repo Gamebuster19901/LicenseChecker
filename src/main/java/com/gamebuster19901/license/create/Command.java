@@ -20,6 +20,7 @@ public abstract class Command implements Comparable{
 		new SetMode();
 		new Exclude();
 		new ExcludeRemove();
+		new Exit();
 	}
 	
 	public final String command;
