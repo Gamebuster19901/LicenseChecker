@@ -14,7 +14,18 @@ import com.google.gson.Gson;
 
 public class LicenseChecker {
 
+	public static boolean silentSkips = false;
+	public static boolean silentIgnores = false;
+	
 	public static void main(String[] args) {
+		for(String s : args) {
+			if(s.equalsIgnoreCase("silenceSkips")){
+				silentSkips = true;
+			}
+			else if (s.equalsIgnoreCase("silenceIgnores")) {
+				silentIgnores = true;
+			}
+		}
 		try {
 			String path = Paths.get(LicenseChecker.class.getProtectionDomain().getCodeSource().getLocation().toURI()).toString();
 			if(path.endsWith(".jar")) {
@@ -50,13 +61,20 @@ public class LicenseChecker {
 								badFiles.add(f);
 							}
 						}
-						else {
+						else if (!silentSkips){
 							System.out.println("Skipping " + f);
 						}
 					}
-					else {
+					else if (!silentIgnores){
 						System.out.println("Ignoring excluded file " + f);
 					}
+				}
+				if(!silentSkips) {
+					System.out.println("\nNote: Skipped the following directories/files:\n");
+					for(String s : settings.getExclusions()) {
+						System.out.println(new File(s).getAbsolutePath());
+					}
+					System.out.println();
 				}
 				if(badFiles.size() > 0) {
 					throw new LicenseException(badFiles, "The following files have incorrect licensing");

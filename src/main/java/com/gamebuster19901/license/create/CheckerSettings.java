@@ -75,6 +75,10 @@ public final class CheckerSettings {
 		excludePaths.remove(path);
 	}
 	
+	public String[] getExclusions() {
+		return excludePaths.toArray(new String[] {});
+	}
+	
 	public boolean isIncluded(File f) {
 		for(String excluded : excludePaths) {
 			if(f.getAbsolutePath().contains(excluded)) {
