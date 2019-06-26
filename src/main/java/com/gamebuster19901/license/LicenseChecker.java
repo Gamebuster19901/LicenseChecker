@@ -42,7 +42,7 @@ public class LicenseChecker {
 			dir = new File(path);
 			
 			System.out.println("Looking for licenses.json...\n");
-			File licensesJSON = new File(path + "/licenses.json");
+			File licensesJSON = new File(path + "/licenseChecker.settings");
 			if(licensesJSON.exists()) {
 				System.out.println("Found licences.json\n");
 				CheckerSettings settings = validate(licensesJSON);
