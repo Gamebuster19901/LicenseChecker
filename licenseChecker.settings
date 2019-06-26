@@ -11,10 +11,10 @@
   },
   "excludePaths": [
     ".gradle",
-    "gradle",
+    "./gradle",
     ".git",
-    "build",
-    "bin",
+    "./build",
+    "./bin",
     ".settings"
   ]
 }

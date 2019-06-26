@@ -139,7 +139,7 @@ public class LicenseChecker {
 				if(!silentSkips) {
 					System.out.println("\nNote: Excluded the following directories/files:\n");
 					for(String s : settings.getExclusions()) {
-						System.out.println(new File(s).getAbsolutePath());
+						System.out.println(new File(s).getCanonicalPath());
 					}
 				}
 				if(applyLicenses) {
@@ -148,7 +148,7 @@ public class LicenseChecker {
 					for(Iterator<File> iterator = badFiles.iterator(); iterator.hasNext();) {
 						File f = iterator.next();
 						try {
-							String extension = "." + Files.getFileExtension(f.getAbsolutePath());
+							String extension = "." + Files.getFileExtension(f.getCanonicalPath());
 							System.out.println("adding license header to " + f);
 							byte[] headerBytes;
 							byte[] fileBytes;
@@ -182,7 +182,7 @@ public class LicenseChecker {
 							fixedFiles++;
 						}
 						catch(Throwable t) {
-							System.err.println("Could not license " + f.getAbsolutePath() + "\n");
+							System.err.println("Could not license " + f.getCanonicalPath() + "\n");
 							t.printStackTrace(System.err);
 							continue;
 						}
@@ -195,7 +195,7 @@ public class LicenseChecker {
 				}
 			}
 			else {
-				throw new LicenseException(licensesJSON, new FileNotFoundException(licensesJSON.getAbsolutePath()));
+				throw new LicenseException(licensesJSON, new FileNotFoundException(licensesJSON.getCanonicalPath()));
 			}
 		}
 		catch(LicenseException e) {

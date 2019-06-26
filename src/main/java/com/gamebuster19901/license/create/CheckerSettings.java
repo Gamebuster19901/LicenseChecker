@@ -19,6 +19,8 @@ package com.gamebuster19901.license.create;
 
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.IOError;
+import java.io.IOException;
 import java.net.URISyntaxException;
 import java.nio.file.Paths;
 import java.util.HashMap;
@@ -102,8 +104,12 @@ public final class CheckerSettings {
 	
 	public boolean isIncluded(File f) {
 		for(String excluded : excludePaths) {
-			if(f.getAbsolutePath().contains(excluded)) {
-				return false;
+			try {
+				if(f.getCanonicalPath().contains(new File(excluded).getCanonicalPath())) {
+					return false;
+				}
+			} catch (IOException e) {
+				throw new IOError(e);
 			}
 		}
 		return true;
