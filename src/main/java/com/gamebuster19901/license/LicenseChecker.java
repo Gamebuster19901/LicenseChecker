@@ -12,7 +12,6 @@ import java.util.HashSet;
 import com.gamebuster19901.license.create.CheckerSettings;
 import static com.gamebuster19901.license.create.HeaderMode.*;
 import com.gamebuster19901.license.create.HeaderModes;
-import com.google.common.io.FileWriteMode;
 import com.google.common.io.Files;
 import com.google.gson.Gson;
 
@@ -127,9 +126,7 @@ public class LicenseChecker {
 							fileBytes[i] = headerBytes[i];
 						}
 						Files.asByteSource(f).openStream().read(fileBytes, headerBytes.length, (int)f.length());
-						f.delete();
-						f.createNewFile();
-						Files.asByteSink(f, FileWriteMode.APPEND).write(fileBytes);
+						Files.asByteSink(f).write(fileBytes);
 					}
 				}
 				if(badFiles.size() > 0) {
