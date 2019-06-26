@@ -50,7 +50,6 @@ public class HeaderModes {
 	}
 	
 	public boolean is(HeaderMode mode) {
-		System.out.println(mode);
 		switch(mode) {
 			case JSON:
 			case FILE:
