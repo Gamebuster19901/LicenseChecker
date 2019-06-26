@@ -18,6 +18,7 @@ public class LicenseChecker {
 
 	public static boolean silentSkips = false;
 	public static boolean silentIgnores = false;
+	private static String path = "";
 	
 	public static void main(String[] args) {
 		for(String s : args) {
@@ -27,17 +28,18 @@ public class LicenseChecker {
 			else if (s.equalsIgnoreCase("silenceIgnores")) {
 				silentIgnores = true;
 			}
+			else if(s.startsWith("path:")) {
+				path = s.substring(s.indexOf("path:"), s.length());
+			}
 		}
 		try {
 			String path = Paths.get(LicenseChecker.class.getProtectionDomain().getCodeSource().getLocation().toURI()).toString();
-			if(path.endsWith(".jar")) {
-				File dir = new File(path);
-				path = dir.getParent();
-			}
-			if(args.length == 1) {
-				path = FileSystems.getDefault().getPath(args[0]).toAbsolutePath().toString();
-			}
 			File dir = new File(path);
+			path = dir.getParent();
+			if(!LicenseChecker.path.isEmpty()) {
+				path = FileSystems.getDefault().getPath(LicenseChecker.path).toAbsolutePath().toString();
+			}
+			dir = new File(path);
 			
 			System.out.println("Looking for licenses.json...\n");
 			File licensesJSON = new File(path + "/licenses.json");
