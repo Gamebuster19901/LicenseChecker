@@ -9,6 +9,8 @@ import java.util.Arrays;
 import java.util.HashSet;
 
 import com.gamebuster19901.license.create.CheckerSettings;
+import static com.gamebuster19901.license.create.HeaderMode.*;
+import com.gamebuster19901.license.create.HeaderModes;
 import com.google.common.io.Files;
 import com.google.gson.Gson;
 
@@ -41,7 +43,7 @@ public class LicenseChecker {
 			File licensesJSON = new File(path + "/licenses.json");
 			if(licensesJSON.exists()) {
 				System.out.println("Found licences.json\n");
-				CheckerSettings settings = validateLicenseJson(licensesJSON);
+				CheckerSettings settings = validate(licensesJSON);
 				System.out.println("Checking for license violations in: " + path + "\n");
 				
 				HashSet<File> badFiles = new HashSet<File>();
@@ -50,8 +52,23 @@ public class LicenseChecker {
 					if(settings.isIncluded(f)) {
 						if(settings.hasExtension("." + Files.getFileExtension(f.getName()))){
 							String extension = "." + Files.getFileExtension(f.getName());
-							byte[] header = settings.getMessage(extension).getBytes();
-							byte[] fileHeader = new byte[header.length];
+							HeaderModes mode = settings.getMode(extension);
+							
+							byte[] header;
+							byte[] fileHeader;
+							if(mode.is(STRING)) {
+								header = settings.getMessage(extension).getBytes();
+							}
+							else if (mode.is(FILE)) {
+								File licenseFile = new File(settings.getMessage(extension));
+								header = new byte[(int)licenseFile.length()];
+								Files.asByteSource(licenseFile).openStream().read(header, 0, (int)licenseFile.length());
+							}
+							else {
+								throw new AssertionError();
+							}
+							
+							fileHeader = new byte[header.length];
 							Files.asByteSource(f).openStream().read(fileHeader, 0, header.length);
 							if(Arrays.equals(header, fileHeader)) {
 								System.out.println(f + " looks good");
@@ -95,7 +112,7 @@ public class LicenseChecker {
 		System.out.println("Everything looks good!\n");
 	}
 	
-	private static CheckerSettings validateLicenseJson(File file) throws Exception {
+	private static CheckerSettings validate(File file) throws Exception {
 		System.out.println("Validiating licenses.json...\n");
 		String json = Files.asCharSource(file, Charset.defaultCharset()).read();
 		Gson gson = new Gson();

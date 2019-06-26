@@ -1,9 +1,9 @@
 package com.gamebuster19901.license.create;
 
-public class ExcludeRemove extends Command{
+public class RemoveExclude extends Command{
 
-	public ExcludeRemove() {
-		super("/excluderemove", "<path|file>", "Removes an exclusion");
+	public RemoveExclude() {
+		super("/removeexclude", "<path|file>", "Removes an exclusion");
 	}
 
 	@Override

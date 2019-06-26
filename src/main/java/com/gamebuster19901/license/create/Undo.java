@@ -17,6 +17,10 @@ public class Undo extends Command{
 			else {
 				settings.currentMessage = settings.currentMessage.substring(0, index);
 				index = settings.currentMessage.lastIndexOf("\n");
+				if(index == -1) {
+					settings.currentMessage = "";
+					return;
+				}
 				settings.currentMessage = settings.currentMessage.substring(0, index);
 				settings.addMessage("");
 			}

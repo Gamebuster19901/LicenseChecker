@@ -1,22 +1,25 @@
 package com.gamebuster19901.license.create;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.net.URISyntaxException;
 import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map.Entry;
 
+import com.gamebuster19901.license.NotFileException;
+
 public final class CheckerSettings {
 	
 	private HashMap<String, String> extensions = new HashMap<String, String>();
-	private HashMap<String, HeaderMode> modes = new HashMap<String, HeaderMode>();
+	private HashMap<String, HeaderModes> modes = new HashMap<String, HeaderModes>();
 	private HashSet<String> excludePaths = new HashSet<String>();
 	
 	transient final File CURRENT_DIRECTORY; 
 	transient String currentExtension = null;
 	transient String currentMessage = null;
-	transient HeaderMode currentMode = null;
+	transient HeaderModes currentMode = null;
 	
 	{
 		try {
@@ -40,6 +43,7 @@ public final class CheckerSettings {
 					throw new IllegalArgumentException(extension + " already exists!");
 				}
 				currentExtension = extension;
+				currentMode = new HeaderModes();
 				return;
 			}
 			throw new IllegalArgumentException("Extensions must begin with '.'");
@@ -93,6 +97,7 @@ public final class CheckerSettings {
 			System.out.println("Cannot finish, mode is not set!");
 		}
 		else {
+			currentMessage = currentMessage.trim();
 			extensions.put(currentExtension, currentMessage);
 			modes.put(currentExtension, currentMode);
 			clear();
@@ -119,7 +124,7 @@ public final class CheckerSettings {
 		return extensions.get(extension);
 	}
 	
-	public HeaderMode getMode(String extension) {
+	public HeaderModes getMode(String extension) {
 		return modes.get(extension);
 	}
 	
@@ -161,6 +166,19 @@ public final class CheckerSettings {
 				throw new NullPointerException("Mode for '" + s + "' is null");
 			}
 		}
+		
+		for(Entry<String, HeaderModes> entry: modes.entrySet()) {
+			HeaderModes mode = entry.getValue();
+			mode.validate();
+			if(mode.is(HeaderMode.FILE)) {
+				File f = new File(extensions.get(entry.getKey()));
+				if(!f.exists()) {
+					throw new FileNotFoundException("Could not find license file for extension " + entry.getKey() + "\n\n" + f.getAbsolutePath());
+				}
+				if(f.isDirectory()) {
+					throw new NotFileException(f.getAbsolutePath());
+				}
+			}
+		}
 	}
-	
 }

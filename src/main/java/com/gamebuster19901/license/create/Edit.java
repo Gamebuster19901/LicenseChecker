@@ -11,7 +11,8 @@ public class Edit extends Command{
 		CheckerSettings settings = CreateChecker.checkerSettings;
 		if(settings.getExtension() == null && settings.hasExtension(params)) {
 			settings.currentExtension = params;
-			settings.currentMessage = settings.getMessage(params);
+			settings.currentMessage = settings.getMessage(params.trim());
+			settings.currentMode = settings.getMode(params);
 			System.out.println("Current header:");
 			System.out.println(settings.getMessage());
 		}

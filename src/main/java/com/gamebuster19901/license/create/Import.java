@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.nio.charset.Charset;
 
 import com.google.common.io.Files;
+import com.google.gson.JsonParseException;
 
 public class Import extends Command{
 
@@ -27,8 +28,9 @@ public class Import extends Command{
 			String json = Files.asCharSource(importLoc, Charset.defaultCharset()).read();
 			CreateChecker.checkerSettings = CreateChecker.GSON.fromJson(json, CheckerSettings.class);
 		}
-		catch(IOException e) {
+		catch(IOException | JsonParseException e) {
 			e.printStackTrace();
+			System.err.println("could not read json file");
 		}
 	}
 	

@@ -16,9 +16,8 @@ public class Add extends Command{
 				"Adds a license to the checker",
 				"====================================================\n"
 				+ "Adds a license to the checker\n\n"
-				+ "if a file is provided, it will read the file and\n"
-				+ "associate its contents as a header to the provided\n"
-				+ "extension\n"
+				+ "if a file is provided, it will associate its\n"
+				+ "contents as a header to the provided extension\n"
 				+ "\n"
 				+ "If there is no file provided, you will be prompted\n"
 				+ "to enter a header to associate for files with the\n"
@@ -50,7 +49,7 @@ public class Add extends Command{
 					File f = path.toFile();
 					String header = Files.asCharSource(f, Charset.defaultCharset()).read();
 					settings.addExtension(param1);
-					settings.addMessage(header);	
+					settings.addMessage(header.trim());
 					settings.finishExtension();
 				}
 				else {

@@ -17,9 +17,10 @@ public abstract class Command implements Comparable{
 		new Remove();
 		new Edit();
 		new Undo();
-		new SetMode();
+		new AddMode();
+		new RemoveMode();
 		new Exclude();
-		new ExcludeRemove();
+		new RemoveExclude();
 		new Exit();
 	}
 	
