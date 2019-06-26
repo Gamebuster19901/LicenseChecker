@@ -24,6 +24,7 @@ public class LicenseException extends Exception {
 		String message = "";
 		for(File f : files) {
 			message += f;
+			message += '\n';
 		}
 		return message;
 	}
