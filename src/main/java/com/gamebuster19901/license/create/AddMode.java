@@ -3,19 +3,19 @@ package com.gamebuster19901.license.create;
 public class AddMode extends Command{
 
 	public AddMode() {
-		super("/addmode", "<append|insert|file|string>", "adds a header mode for the current header", 
+		super("/addmode", "<append|json|file|string>", "adds a header mode for the current header", 
 				"adds the header mode for the current header\n\n"
-				+ "can be either 'append, 'insert', 'file' or 'string'\n\n"
+				+ "can be either 'append, 'json', 'file' or 'string'\n\n"
 						
 				+ "append appends the header to the top of the file\n"
-				+ "insert will insert the header 1 line below the top of the file (used for json)\n"
-				+ "if neither append nor insert are specified, it will default to append"
+				+ "json will insert the header 1 line below the top of the file (used for json)\n"
+				+ "if neither append nor json are specified, it will default to append"
 				
 				+ "file will read the license text from a file instead of the raw string"
 				+ "string will read the license text from the raw string"
 				+ "if neither file nor string is specified, it will default to string"
 				+ ""
-				+ "append and insert are mutually exclusive"
+				+ "append and json are mutually exclusive"
 				+ "file and string are mutually exclusive");
 	}
 

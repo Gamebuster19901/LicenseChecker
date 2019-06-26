@@ -52,13 +52,13 @@ public class HeaderModes {
 	public boolean is(HeaderMode mode) {
 		System.out.println(mode);
 		switch(mode) {
-			case INSERT:
+			case JSON:
 			case FILE:
 				return modes.contains(mode);
 			case STRING:
 				return modes.contains(STRING) || (!modes.contains(STRING) && !modes.contains(FILE));
 			case APPEND:
-				return modes.contains(APPEND) || (!modes.contains(APPEND) && !modes.contains(INSERT));
+				return modes.contains(APPEND) || (!modes.contains(APPEND) && !modes.contains(JSON));
 			default:
 				throw new AssertionError();
 		}
