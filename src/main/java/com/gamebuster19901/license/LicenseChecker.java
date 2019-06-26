@@ -1,3 +1,20 @@
+/*
+ * Copyright 2019 Gamebuster19901
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+ */
+
 package com.gamebuster19901.license;
 
 import static com.gamebuster19901.license.create.HeaderMode.*;
@@ -122,7 +139,7 @@ public class LicenseChecker {
 				if(!silentSkips) {
 					System.out.println("\nNote: Excluded the following directories/files:\n");
 					for(String s : settings.getExclusions()) {
-						System.out.println(new File(s).getAbsolutePath());
+						System.out.println(new File(s).getCanonicalPath());
 					}
 				}
 				if(applyLicenses) {
@@ -131,7 +148,7 @@ public class LicenseChecker {
 					for(Iterator<File> iterator = badFiles.iterator(); iterator.hasNext();) {
 						File f = iterator.next();
 						try {
-							String extension = "." + Files.getFileExtension(f.getAbsolutePath());
+							String extension = "." + Files.getFileExtension(f.getCanonicalPath());
 							System.out.println("adding license header to " + f);
 							byte[] headerBytes;
 							byte[] fileBytes;
@@ -165,7 +182,7 @@ public class LicenseChecker {
 							fixedFiles++;
 						}
 						catch(Throwable t) {
-							System.err.println("Could not license " + f.getAbsolutePath() + "\n");
+							System.err.println("Could not license " + f.getCanonicalPath() + "\n");
 							t.printStackTrace(System.err);
 							continue;
 						}
@@ -178,7 +195,7 @@ public class LicenseChecker {
 				}
 			}
 			else {
-				throw new LicenseException(licensesJSON, new FileNotFoundException(licensesJSON.getAbsolutePath()));
+				throw new LicenseException(licensesJSON, new FileNotFoundException(licensesJSON.getCanonicalPath()));
 			}
 		}
 		catch(LicenseException e) {
