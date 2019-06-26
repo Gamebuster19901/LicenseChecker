@@ -46,10 +46,19 @@ public abstract class Command implements Comparable{
 	public abstract void exec(String params) throws InterruptedException;
 	
 	public final boolean matches(String input) {
-		if(input.startsWith(command)) {
+		if(input.indexOf(' ') != -1) {
+			input = input.substring(0, input.indexOf(' '));
+		}
+		String escapedInput = "^" + escapeRegex(input) + "(\\s.*|\\s$|\\n$|$)";
+		if(command.matches(escapedInput)) {
 			return true;
 		}
 		return false;
+	}
+	
+	private final String escapeRegex(String input) {
+		input = input.replaceAll("[\\W]", "\\\\$0");
+		return input;
 	}
 	
 	public String toString() {
