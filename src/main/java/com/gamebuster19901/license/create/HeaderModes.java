@@ -2,6 +2,7 @@ package com.gamebuster19901.license.create;
 
 import java.util.ArrayList;
 import java.util.Iterator;
+import static com.gamebuster19901.license.create.HeaderMode.*;
 
 public class HeaderModes {
 
@@ -49,12 +50,17 @@ public class HeaderModes {
 	}
 	
 	public boolean is(HeaderMode mode) {
+		System.out.println(mode);
 		switch(mode) {
 			case INSERT:
 			case FILE:
 				return modes.contains(mode);
+			case STRING:
+				return modes.contains(STRING) || (!modes.contains(STRING) && !modes.contains(FILE));
+			case APPEND:
+				return modes.contains(APPEND) || (!modes.contains(APPEND) && !modes.contains(INSERT));
 			default:
-				return true;
+				throw new AssertionError();
 		}
 	}
 	
