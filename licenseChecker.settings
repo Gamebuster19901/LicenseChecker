@@ -1,0 +1,20 @@
+{
+  "extensions": {
+    ".java": "license.javaheader"
+  },
+  "modes": {
+    ".java": {
+      "modes": [
+        "FILE"
+      ]
+    }
+  },
+  "excludePaths": [
+    ".gradle",
+    "gradle",
+    ".git",
+    "build",
+    "bin",
+    ".settings"
+  ]
+}
