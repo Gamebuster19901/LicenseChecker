@@ -8,6 +8,7 @@ import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 
 import com.gamebuster19901.license.create.CheckerSettings;
 import static com.gamebuster19901.license.create.HeaderMode.*;
@@ -99,7 +100,12 @@ public class LicenseChecker {
 								System.out.println(f + " looks good");
 							}
 							else{
-								System.err.println(f + " is missing or has an incorrect license");
+								if(!applyLicenses) {
+									System.err.println(f + " is missing or has an incorrect license");
+								}
+								else {
+									System.out.println("marking " + f + " for licensing");
+								}
 								badFiles.add(f);
 							}
 						}
@@ -111,6 +117,7 @@ public class LicenseChecker {
 						System.out.println("Ignoring excluded file " + f);
 					}
 				}
+				System.out.println();
 				if(!silentSkips) {
 					System.out.println("\nNote: Excluded the following directories/files:\n");
 					for(String s : settings.getExclusions()) {
@@ -118,38 +125,51 @@ public class LicenseChecker {
 					}
 				}
 				if(applyLicenses) {
-					for(File f : badFiles) {
-						String extension = "." + Files.getFileExtension(f.getAbsolutePath());
-						System.out.println("adding license header to " + f);
-						byte[] headerBytes;
-						byte[] fileBytes;
-						HeaderModes mode = settings.getMode(extension);
-						if(mode.is(APPEND)){
-							headerBytes = LICENSES.get(extension);
-							fileBytes = new byte[headerBytes.length + (int)f.length()];
-							for(int i = 0; i < headerBytes.length; i++) {
-								fileBytes[i] = headerBytes[i];
+					int badTotal = badFiles.size();
+					int fixedFiles = 0;
+					for(Iterator<File> iterator = badFiles.iterator(); iterator.hasNext();) {
+						File f = iterator.next();
+						try {
+							String extension = "." + Files.getFileExtension(f.getAbsolutePath());
+							System.out.println("adding license header to " + f);
+							byte[] headerBytes;
+							byte[] fileBytes;
+							HeaderModes mode = settings.getMode(extension);
+							if(mode.is(APPEND)){
+								headerBytes = LICENSES.get(extension);
+								fileBytes = new byte[headerBytes.length + (int)f.length()];
+								for(int i = 0; i < headerBytes.length; i++) {
+									fileBytes[i] = headerBytes[i];
+								}
 							}
-						}
-						else if (mode.is(JSON)) {
-							headerBytes = LICENSES.get(extension);
-							fileBytes = new byte[headerBytes.length + (int)f.length()];
-							if(fileBytes.length < 2) {
-								fileBytes = new byte[2];
-								System.err.println("The file output was less than 2 bytes, a JSON file must be at least 2 bytes, manually setting the length to 2!");
+							else if (mode.is(JSON)) {
+								headerBytes = LICENSES.get(extension);
+								fileBytes = new byte[headerBytes.length + (int)f.length()];
+								if(fileBytes.length < 2) {
+									fileBytes = new byte[2];
+									System.err.println("The file output was less than 2 bytes, a JSON file must be at least 2 bytes, manually setting the length to 2!\n");
+								}
+								fileBytes[0] = '{';
+								fileBytes[1] = '\n';
+								for(int i = 2; i < headerBytes.length; i++) {
+									fileBytes[i] = headerBytes[i];
+								}
 							}
-							fileBytes[0] = '{';
-							fileBytes[1] = '\n';
-							for(int i = 2; i < headerBytes.length; i++) {
-								fileBytes[i] = headerBytes[i];
+							else {
+								throw new AssertionError();
 							}
+							Files.asByteSource(f).openStream().read(fileBytes, headerBytes.length, (int)f.length());
+							Files.asByteSink(f).write(fileBytes);
+							iterator.remove();
+							fixedFiles++;
 						}
-						else {
-							throw new AssertionError();
+						catch(Throwable t) {
+							System.err.println("Could not license " + f.getAbsolutePath() + "\n");
+							t.printStackTrace(System.err);
+							continue;
 						}
-						Files.asByteSource(f).openStream().read(fileBytes, headerBytes.length, (int)f.length());
-						Files.asByteSink(f).write(fileBytes);
 					}
+					System.out.println("Licensed (" + fixedFiles + "/" + badTotal + ") licensable files\n");
 				}
 				if(badFiles.size() > 0) {
 					System.err.println();
