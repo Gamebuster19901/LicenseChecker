@@ -22,7 +22,6 @@ import static com.gamebuster19901.license.create.HeaderMode.*;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.nio.charset.Charset;
-import java.nio.file.FileSystems;
 import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -61,6 +60,12 @@ public class LicenseChecker {
 			else if (s.equalsIgnoreCase("stripLicenses")) {
 				stripLicenses = true;
 			}
+			else if (s.equalsIgnoreCase("notBinary")) {
+				path = new File(new File(".").getAbsolutePath()).getParentFile().getAbsolutePath();
+			}
+			else if (s.startsWith("path:")) {
+				path = s.substring(s.indexOf("path:"));
+			}
 			if(applyLicenses && stripLicenses) {
 				throw new IllegalStateException("Cannot both apply and strip licenses at the same time!");
 			}
@@ -70,7 +75,7 @@ public class LicenseChecker {
 			File dir = new File(path);
 			path = dir.getParent();
 			if(!LicenseChecker.path.isEmpty()) {
-				path = FileSystems.getDefault().getPath(LicenseChecker.path).toAbsolutePath().toString();
+				path = LicenseChecker.path;
 			}
 			dir = new File(path);
 			
