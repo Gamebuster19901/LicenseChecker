@@ -74,7 +74,7 @@ public class LicenseChecker {
 			}
 			dir = new File(path);
 			
-			System.out.println("Looking for licenses.json...\n");
+			System.out.println("Looking for licenseChecker.settings...\n");
 			File licensesJSON = new File(path + "/licenseChecker.settings");
 			if(licensesJSON.exists()) {
 				System.out.println("Found licences.json\n");
@@ -210,7 +210,7 @@ public class LicenseChecker {
 	}
 	
 	private static CheckerSettings validate(File file) throws Exception {
-		System.out.println("Validiating licenses.json...\n");
+		System.out.println("Validiating licenseChecker.settings...\n");
 		String json = Files.asCharSource(file, Charset.defaultCharset()).read();
 		Gson gson = new Gson();
 		CheckerSettings settings = gson.fromJson(json, CheckerSettings.class);
