@@ -39,24 +39,23 @@ dependencies {
 }
 
 task checkLicenses(type: JavaExec) {
-    classpath files('LicenseChecker-1.0.0.0.jar')
     classpath += sourceSets.main.runtimeClasspath
     println main = "com.gamebuster19901.license.LicenseChecker"
+    args = ['notBinary']
 }
 build.dependsOn checkLicenses
 
 task applyLicenses(type: JavaExec) {
-    classpath = files('LicenseChecker-1.0.0.0.jar')
     classpath += sourceSets.main.runtimeClasspath
     println main = "com.gamebuster19901.license.LicenseChecker"
-    args = ['applyLicenses']
+    args = ['notBinary', 'applyLicenses']
 }
 
 task editLicenses(type:JavaExec) {
-    classpath = files('LicenseChecker-1.0.0.0.jar')
     classpath += sourceSets.main.runtimeClasspath
     standardInput = System.in
     println main = "com.gamebuster19901.license.create.CreateChecker"
+    args = ['notBinary', 'applyLicenses']
 }
 
 task stripLicenses{
