@@ -58,8 +58,11 @@ task editLicenses(type:JavaExec) {
     args = ['notBinary', 'applyLicenses']
 }
 
-task stripLicenses{
-    println "license stripping not implemented yet"
+task stripLicenses(type:JavaExec){
+    classpath += sourceSets.main.runtimeClasspath
+    standardInput = System.in
+    println main = "com.gamebuster19901.license.LicenseChecker"
+    args = ['notBinary', 'stripLicenses']
 }
 
 editLicenses.dependsOn stripLicenses
