@@ -21,6 +21,7 @@ import static com.gamebuster19901.license.create.HeaderMode.*;
 
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.nio.charset.Charset;
 import java.nio.file.Paths;
 import java.util.Arrays;
@@ -30,10 +31,13 @@ import java.util.Iterator;
 
 import com.gamebuster19901.license.create.CheckerSettings;
 import com.gamebuster19901.license.create.HeaderModes;
+import static com.gamebuster19901.license.CheckStatus.*;
+
+import com.google.common.base.Throwables;
 import com.google.common.io.Files;
 import com.google.gson.Gson;
 
-public class LicenseChecker {
+public final class LicenseChecker {
 
 	public static boolean silentSkips = false;
 	public static boolean silentIgnores = false;
@@ -86,117 +90,25 @@ public class LicenseChecker {
 				CheckerSettings settings = validate(licensesJSON);
 				System.out.println("Checking for license violations in: " + path + "\n");
 				
-				HashSet<File> badFiles = new HashSet<File>();
+				HashSet<File> badFiles;
+				setLicenses(settings);
 				
-				for(String extension : settings.getExtensions()) {
-					HeaderModes mode = settings.getMode(extension);
-					byte[] header;
-					if(mode.is(STRING)) {
-						header = settings.getMessage(extension).getBytes();
+				if(!stripLicenses) {
+					badFiles = check(dir, settings);
+					if(applyLicenses) {
+						badFiles = apply(settings, badFiles);
 					}
-					else if (mode.is(FILE)) {
-						File licenseFile = new File(settings.getMessage(extension));
-						header = new byte[(int)licenseFile.length()];
-						Files.asByteSource(licenseFile).openStream().read(header, 0, (int)licenseFile.length());
-					}
-					else {
-						throw new AssertionError();
-					}
-					LICENSES.put(extension, header);
-				}
-				
-				for(File f : Files.fileTreeTraverser().breadthFirstTraversal(dir)) {
-					if(settings.isIncluded(f)) {
-						if(settings.hasExtension("." + Files.getFileExtension(f.getName()))){
-							String extension = "." + Files.getFileExtension(f.getName());
-							
-							byte[] header = LICENSES.get(extension);
-							byte[] fileHeader;
-							
-							if(header == null) {
-								throw new AssertionError(new NullPointerException("LICENSES.get(String[" + extension + "]);"));
-							}
-							
-							fileHeader = new byte[header.length];
-							Files.asByteSource(f).openStream().read(fileHeader, 0, header.length);
-							if(Arrays.equals(header, fileHeader)) {
-								System.out.println(f + " looks good");
-							}
-							else{
-								if(!applyLicenses) {
-									System.err.println(f + " is missing or has an incorrect license");
-								}
-								else {
-									System.out.println("marking " + f + " for licensing");
-								}
-								badFiles.add(f);
-							}
-						}
-						else if (!silentSkips){
-							System.out.println("Skipping " + f);
-						}
-					}
-					else if (!silentIgnores){
-						System.out.println("Ignoring excluded file " + f);
+
+					if(badFiles.size() > 0) {
+						System.err.println();
+						throw new LicenseException(badFiles, "The following files have incorrect licensing:\n");
 					}
 				}
-				System.out.println();
-				if(!silentSkips) {
-					System.out.println("\nNote: Excluded the following directories/files:\n");
-					for(String s : settings.getExclusions()) {
-						System.out.println(new File(s).getCanonicalPath());
+				else {
+					HashMap<File, String> fails = stripLicenses(dir, settings);
+					if(fails.size() > 0) {
+						throw new LicenseException(fails.keySet(), "Failed to strip some files, see log for more details");
 					}
-				}
-				if(applyLicenses) {
-					int badTotal = badFiles.size();
-					int fixedFiles = 0;
-					for(Iterator<File> iterator = badFiles.iterator(); iterator.hasNext();) {
-						File f = iterator.next();
-						try {
-							String extension = "." + Files.getFileExtension(f.getCanonicalPath());
-							System.out.println("adding license header to " + f);
-							byte[] headerBytes;
-							byte[] fileBytes;
-							HeaderModes mode = settings.getMode(extension);
-							if(mode.is(APPEND)){
-								headerBytes = LICENSES.get(extension);
-								fileBytes = new byte[headerBytes.length + (int)f.length()];
-								for(int i = 0; i < headerBytes.length; i++) {
-									fileBytes[i] = headerBytes[i];
-								}
-							}
-							else if (mode.is(JSON)) {
-								headerBytes = LICENSES.get(extension);
-								fileBytes = new byte[headerBytes.length + (int)f.length()];
-								if(fileBytes.length < 2) {
-									fileBytes = new byte[2];
-									System.err.println("The file output was less than 2 bytes, a JSON file must be at least 2 bytes, manually setting the length to 2!\n");
-								}
-								fileBytes[0] = '{';
-								fileBytes[1] = '\n';
-								for(int i = 2; i < headerBytes.length; i++) {
-									fileBytes[i] = headerBytes[i];
-								}
-							}
-							else {
-								throw new AssertionError();
-							}
-							Files.asByteSource(f).openStream().read(fileBytes, headerBytes.length, (int)f.length());
-							Files.asByteSink(f).write(fileBytes);
-							iterator.remove();
-							fixedFiles++;
-						}
-						catch(Throwable t) {
-							System.err.println("Could not license " + f.getCanonicalPath() + "\n");
-							t.printStackTrace(System.err);
-							continue;
-						}
-					}
-					System.out.println("Licensed (" + fixedFiles + "/" + badTotal + ") licensable files\n");
-				}
-				if(badFiles.size() > 0) {
-					System.err.println();
-					throw new LicenseException(badFiles, "The following files have incorrect licensing:\n");
 				}
 			}
 			else {
@@ -212,6 +124,191 @@ public class LicenseChecker {
 			System.exit(3);
 		}
 		System.out.println("Everything looks good!\n");
+	}
+	
+	private static void setLicenses(CheckerSettings settings) throws Exception {
+		for(String extension : settings.getExtensions()) {
+			HeaderModes mode = settings.getMode(extension);
+			byte[] header;
+			if(mode.is(STRING)) {
+				header = settings.getMessage(extension).getBytes();
+			}
+			else if (mode.is(FILE)) {
+				File licenseFile = new File(settings.getMessage(extension));
+				header = new byte[(int)licenseFile.length()];
+				Files.asByteSource(licenseFile).openStream().read(header, 0, (int)licenseFile.length());
+			}
+			else {
+				throw new AssertionError();
+			}
+			LICENSES.put(extension, header);
+		}
+	}
+	
+	private static HashSet<File> check(File dir, CheckerSettings settings) throws Exception{
+		HashSet<File> badFiles = new HashSet<File>();
+		for(File f : Files.fileTreeTraverser().breadthFirstTraversal(dir)) {
+			CheckStatus status = getStatus(f, settings);
+			switch (status) {
+				case PASSED:
+					System.out.println(f + " looks good");
+					break;
+				case FAILED:
+					if(!applyLicenses) {
+						System.err.println(f + " is missing or has an incorrect license");
+					}
+					else {
+						System.out.println("marking " + f + " for licensing");
+					}
+					badFiles.add(f);
+					break;
+				case IGNORED:
+					if(!silentIgnores) {
+						System.out.println("Ignoring excluded file " + f);
+					}
+					break;
+				case SKIPPED:
+					if(!silentSkips) {
+						System.out.println("Skipping " + f);
+					}
+					break;
+				default:
+					throw new AssertionError(status);
+			}
+		}
+		System.out.println();
+		if(!silentSkips) {
+			System.out.println("\nNote: Excluded the following directories/files:\n");
+			for(String s : settings.getExclusions()) {
+				System.out.println(new File(s).getCanonicalPath());
+			}
+		}
+		return badFiles;
+	}
+	
+	private static HashSet<File> apply(CheckerSettings settings, HashSet<File> badFiles) throws Exception {
+		if(applyLicenses) {
+			int badTotal = badFiles.size();
+			int fixedFiles = 0;
+			for(Iterator<File> iterator = badFiles.iterator(); iterator.hasNext();) {
+				File f = iterator.next();
+				try {
+					String extension = getExtension(f);
+					System.out.println("adding license header to " + f);
+					byte[] headerBytes;
+					byte[] fileBytes;
+					HeaderModes mode = settings.getMode(extension);
+					if(mode.is(APPEND)){
+						headerBytes = LICENSES.get(extension);
+						fileBytes = new byte[headerBytes.length + (int)f.length()];
+						for(int i = 0; i < headerBytes.length; i++) {
+							fileBytes[i] = headerBytes[i];
+						}
+					}
+					else if (mode.is(JSON)) {
+						headerBytes = LICENSES.get(extension);
+						fileBytes = new byte[headerBytes.length + (int)f.length()];
+						if(fileBytes.length < 2) {
+							fileBytes = new byte[2];
+							System.err.println("The file output was less than 2 bytes, a JSON file must be at least 2 bytes, manually setting the length to 2!\n");
+						}
+						fileBytes[0] = '{';
+						fileBytes[1] = '\n';
+						for(int i = 2; i < headerBytes.length; i++) {
+							fileBytes[i] = headerBytes[i];
+						}
+					}
+					else {
+						throw new AssertionError();
+					}
+					Files.asByteSource(f).openStream().read(fileBytes, headerBytes.length, (int)f.length());
+					Files.asByteSink(f).write(fileBytes);
+					iterator.remove();
+					fixedFiles++;
+				}
+				catch(Throwable t) {
+					System.err.println("Could not license " + f.getCanonicalPath() + "\n");
+					t.printStackTrace(System.err);
+					continue;
+				}
+			}
+			System.out.println("Licensed (" + fixedFiles + "/" + badTotal + ") licensable files\n");
+		}
+		return badFiles;
+	}
+	
+	private static HashMap<File, String> stripLicenses(File dir, CheckerSettings settings) throws Exception {
+		HashMap<File, String> failedStrippings = new HashMap<File, String>();
+		int totalStrippings = 0;
+		for(File f : Files.fileTreeTraverser().breadthFirstTraversal(dir)) {
+			switch(getStatus(f, settings)) {
+				case PASSED:
+					totalStrippings++;
+					try {
+						byte[] fileBytes = new byte[(int) f.length()]; 
+						Files.asByteSource(f).openStream().read(fileBytes, 0, (int)f.length());
+						String fileText = new String(fileBytes);
+						String license = new String(LICENSES.get(getExtension(f)));
+						String strippedFile = fileText.substring(license.length());
+						Files.asByteSink(f).openStream().write(strippedFile.getBytes());
+						System.out.println("Stripped " + f);
+					}
+					catch(Exception e) {
+						IOException exception = new IOException("Could not strip license from " + f.getAbsolutePath(), e);
+						failedStrippings.put(f, Throwables.getStackTraceAsString(exception));
+						exception.printStackTrace(System.err);
+					}
+					break;
+				case FAILED:
+					totalStrippings++;
+					String message = "Could not find a matching license header in file: " + f.getAbsolutePath();
+					failedStrippings.put(f, message);
+					System.out.println(message);
+					break;
+				case IGNORED:
+					if(!silentIgnores) {
+						System.out.println("Ignoring file with no applicable license header: " + f);
+					}
+					break;
+				case SKIPPED:
+					if(!silentSkips) {
+						System.out.println("Skipping " + f);
+					}
+					break;
+			}
+		}
+		for(String s : failedStrippings.values()) {
+			System.out.println(s);
+		}
+		System.out.println("\nStripped (" + (totalStrippings - failedStrippings.size()) + "/" + totalStrippings + ") applicable files\n");
+		return failedStrippings;
+	}
+	
+	private static CheckStatus getStatus(File file, CheckerSettings settings) throws Exception{
+		if(!settings.isIncluded(file)) {
+			return SKIPPED;
+		}
+		String extension = getExtension(file);
+		if(settings.hasExtension(extension)){
+			byte[] header = LICENSES.get(extension);
+			byte[] fileHeader;
+			
+			if(header == null) {
+				throw new AssertionError(new NullPointerException("LICENSES.get(String[" + extension + "]);"));
+			}
+			
+			fileHeader = new byte[header.length];
+			Files.asByteSource(file).openStream().read(fileHeader, 0, header.length);
+			if (Arrays.equals(header, fileHeader)){
+				return PASSED;
+			}
+			return FAILED;
+		}
+		return IGNORED;
+	}
+	
+	private static String getExtension(File file) {
+		return "." + Files.getFileExtension(file.getAbsolutePath());
 	}
 	
 	private static CheckerSettings validate(File file) throws Exception {
