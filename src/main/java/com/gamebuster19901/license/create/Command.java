@@ -34,8 +34,8 @@ public abstract class Command implements Comparable{
 		new Remove();
 		new Edit();
 		new Undo();
-		new AddMode();
-		new RemoveMode();
+		new AddFlag();
+		new RemoveFlag();
 		new Exclude();
 		new RemoveExclude();
 		new Exit();

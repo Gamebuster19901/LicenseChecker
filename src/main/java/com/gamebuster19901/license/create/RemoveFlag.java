@@ -17,30 +17,27 @@
 
 package com.gamebuster19901.license.create;
 
-public class RemoveMode extends Command{
+import com.gamebuster19901.license.flags.HeaderFlag;
 
-	public RemoveMode() {
-		super("/removemode", "<append|insert|file|string>", "removes a header mode for the current header, note: will use defaults if none specified",
-				"removes a header mode for the current header, note: will use defaults if none specified\n"
-				+ "\n"
-				+ "The default values are [append, string]\n"
-				+ "if append or insert is not specified, it will default to append\n"
-				+ "if file or string is not specified, it will default to file\n");
+public class RemoveFlag extends Command{
+
+	public RemoveFlag() {
+		super("/removeflag", "<string:flag>", "removes an edit flag for the current header");
 	}
 
 	@Override
 	public void exec(String params) throws InterruptedException {
 		if(CreateChecker.checkerSettings.getExtension() != null) {
-			for(HeaderMode mode : HeaderMode.values()) {
-				if(params.equalsIgnoreCase(mode.name())) {
-					CreateChecker.checkerSettings.currentMode.remove(mode);
+			for(HeaderFlag flag : HeaderFlag.getEditFlags()) {
+				if(params.equalsIgnoreCase(flag.name())) {
+					CreateChecker.checkerSettings.currentMode.remove(flag);
 					return;
 				}
 			}
-			System.out.println(params + " is not a valid mode!");
+			System.out.println(params + " is not a valid flag!");
 		}
 		else {
-			System.out.println("You must be editing a header to edit its mode!");
+			System.out.println("You must be editing a header to edit its flag!");
 		}
 	}
 

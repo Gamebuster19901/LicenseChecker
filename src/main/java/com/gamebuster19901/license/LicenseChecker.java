@@ -17,8 +17,6 @@
 
 package com.gamebuster19901.license;
 
-import static com.gamebuster19901.license.create.HeaderMode.*;
-
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -29,25 +27,33 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 
-import com.gamebuster19901.license.create.CheckerSettings;
-import com.gamebuster19901.license.create.HeaderModes;
+import static com.gamebuster19901.license.CheckerPhase.*;
+import static com.gamebuster19901.license.flags.HeaderFlag.*;
 import static com.gamebuster19901.license.CheckStatus.*;
 
+import com.gamebuster19901.license.create.CheckerSettings;
+import com.gamebuster19901.license.flags.AppendFlag;
+import com.gamebuster19901.license.flags.HeaderFlag;
+import com.gamebuster19901.license.flags.HeaderFlags;
+import com.gamebuster19901.license.flags.HeaderFlag.LocationFlag;
 import com.google.common.base.Throwables;
 import com.google.common.io.Files;
 import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 
 public final class LicenseChecker {
 
-	public static boolean silentSkips = false;
-	public static boolean silentIgnores = false;
-	public static boolean applyLicenses = false;
-	public static boolean stripLicenses = false;
+	private static boolean silentSkips = false;
+	private static boolean silentIgnores = false;
+	private static boolean applyLicenses = false;
+	private static boolean stripLicenses = false;
 	private static String path = "";
 	
 	private static final HashMap<String , byte[]> LICENSES = new HashMap<String, byte[]>();
+	private static CheckerPhase PHASE = UNINITIALIZED;
 	
 	public static void main(String[] args) {
+		setPhase(INITIALIZING);
 		for(String s : args) {
 			if(s.equalsIgnoreCase("silenceSkips")){
 				silentSkips = true;
@@ -74,6 +80,7 @@ public final class LicenseChecker {
 				throw new IllegalStateException("Cannot both apply and strip licenses at the same time!");
 			}
 		}
+		setPhase(INITIALIZED);
 		try {
 			String path = Paths.get(LicenseChecker.class.getProtectionDomain().getCodeSource().getLocation().toURI()).toString();
 			File dir = new File(path);
@@ -83,12 +90,12 @@ public final class LicenseChecker {
 			}
 			dir = new File(path);
 			
+			setPhase(FINDING_SETTINGS);
 			System.out.println("Looking for licenseChecker.settings...\n");
 			File licensesJSON = new File(path + "/licenseChecker.settings");
 			if(licensesJSON.exists()) {
-				System.out.println("Found licences.json\n");
+				System.out.println("Found licencesChecker.settings\n");
 				CheckerSettings settings = validate(licensesJSON);
-				System.out.println("Checking for license violations in: " + path + "\n");
 				
 				HashSet<File> badFiles;
 				setLicenses(settings);
@@ -116,36 +123,40 @@ public final class LicenseChecker {
 			}
 		}
 		catch(LicenseException e) {
+			System.err.println("Failed in phase: " + PHASE);
 			e.printStackTrace(System.err);
+			setPhase(CheckerPhase.FAILED);
 			System.exit(2);
 		}
 		catch(Throwable t) {
+			System.err.println("Failed in phase: " + PHASE);
 			t.printStackTrace(System.err);
+			setPhase(CheckerPhase.FAILED);
 			System.exit(3);
 		}
+		setPhase(CheckerPhase.SUCCESS);
 		System.out.println("Everything looks good!\n");
 	}
 	
 	private static void setLicenses(CheckerSettings settings) throws Exception {
+		setPhase(GETTING_HEADERS);
 		for(String extension : settings.getExtensions()) {
-			HeaderModes mode = settings.getMode(extension);
+			HeaderFlags flags = settings.getMode(extension);
 			byte[] header;
-			if(mode.is(STRING)) {
-				header = settings.getMessage(extension).getBytes();
+			for(HeaderFlag flag : flags) {
+				if(flag instanceof LocationFlag) {
+					header = ((LocationFlag) flag).getHeader(settings, extension);
+					if (LICENSES.put(extension, header) != null) {
+						throw new AssertionError("Header already set?!");
+					}
+				}
 			}
-			else if (mode.is(FILE)) {
-				File licenseFile = new File(settings.getMessage(extension));
-				header = new byte[(int)licenseFile.length()];
-				Files.asByteSource(licenseFile).openStream().read(header, 0, (int)licenseFile.length());
-			}
-			else {
-				throw new AssertionError();
-			}
-			LICENSES.put(extension, header);
 		}
 	}
 	
 	private static HashSet<File> check(File dir, CheckerSettings settings) throws Exception{
+		setPhase(CHECKING_HEADERS);
+		System.out.println("Checking for license violations in: " + path + "\n");
 		HashSet<File> badFiles = new HashSet<File>();
 		for(File f : Files.fileTreeTraverser().breadthFirstTraversal(dir)) {
 			CheckStatus status = getStatus(f, settings);
@@ -187,57 +198,35 @@ public final class LicenseChecker {
 	}
 	
 	private static HashSet<File> apply(CheckerSettings settings, HashSet<File> badFiles) throws Exception {
-		if(applyLicenses) {
-			int badTotal = badFiles.size();
-			int fixedFiles = 0;
-			for(Iterator<File> iterator = badFiles.iterator(); iterator.hasNext();) {
-				File f = iterator.next();
-				try {
-					String extension = getExtension(f);
-					System.out.println("adding license header to " + f);
-					byte[] headerBytes;
-					byte[] fileBytes;
-					HeaderModes mode = settings.getMode(extension);
-					if(mode.is(APPEND)){
-						headerBytes = LICENSES.get(extension);
-						fileBytes = new byte[headerBytes.length + (int)f.length()];
-						for(int i = 0; i < headerBytes.length; i++) {
-							fileBytes[i] = headerBytes[i];
-						}
+		setPhase(APPLYING_HEADERS);
+		int badTotal = badFiles.size();
+		int fixedFiles = 0;
+		for(Iterator<File> iterator = badFiles.iterator(); iterator.hasNext();) {
+			File f = iterator.next();
+			try {
+				String extension = getExtension(f);
+				HeaderFlags flags = settings.getMode(extension);
+				System.out.println("adding license header to " + f);
+				for(HeaderFlag flag : flags) {
+					if(flag instanceof AppendFlag) {
+						((AppendFlag) flag).apply(f);
 					}
-					else if (mode.is(JSON)) {
-						headerBytes = LICENSES.get(extension);
-						fileBytes = new byte[headerBytes.length + (int)f.length()];
-						if(fileBytes.length < 2) {
-							fileBytes = new byte[2];
-							System.err.println("The file output was less than 2 bytes, a JSON file must be at least 2 bytes, manually setting the length to 2!\n");
-						}
-						fileBytes[0] = '{';
-						fileBytes[1] = '\n';
-						for(int i = 2; i < headerBytes.length; i++) {
-							fileBytes[i] = headerBytes[i];
-						}
-					}
-					else {
-						throw new AssertionError();
-					}
-					Files.asByteSource(f).openStream().read(fileBytes, headerBytes.length, (int)f.length());
-					Files.asByteSink(f).write(fileBytes);
-					iterator.remove();
-					fixedFiles++;
 				}
-				catch(Throwable t) {
-					System.err.println("Could not license " + f.getCanonicalPath() + "\n");
-					t.printStackTrace(System.err);
-					continue;
-				}
+				iterator.remove();
+				fixedFiles++;
 			}
-			System.out.println("Licensed (" + fixedFiles + "/" + badTotal + ") licensable files\n");
+			catch(Throwable t) {
+				System.err.println("Could not license " + f.getCanonicalPath() + "\n");
+				t.printStackTrace(System.err);
+				continue;
+			}
 		}
+		System.out.println("Licensed (" + fixedFiles + "/" + badTotal + ") licensable files\n");
 		return badFiles;
 	}
 	
 	private static HashMap<File, String> stripLicenses(File dir, CheckerSettings settings) throws Exception {
+		setPhase(STRIPPING_HEADERS);
 		HashMap<File, String> failedStrippings = new HashMap<File, String>();
 		int totalStrippings = 0;
 		for(File f : Files.fileTreeTraverser().breadthFirstTraversal(dir)) {
@@ -284,7 +273,7 @@ public final class LicenseChecker {
 		return failedStrippings;
 	}
 	
-	private static CheckStatus getStatus(File file, CheckerSettings settings) throws Exception{
+	static CheckStatus getStatus(File file, CheckerSettings settings) throws Exception{
 		if(!settings.isIncluded(file)) {
 			return SKIPPED;
 		}
@@ -302,25 +291,50 @@ public final class LicenseChecker {
 			if (Arrays.equals(header, fileHeader)){
 				return PASSED;
 			}
-			return FAILED;
+			return CheckStatus.FAILED;
 		}
 		return IGNORED;
 	}
 	
-	private static String getExtension(File file) {
-		return "." + Files.getFileExtension(file.getAbsolutePath());
-	}
-	
 	private static CheckerSettings validate(File file) throws Exception {
+		setPhase(VALIDATING_SETTINGS);
 		System.out.println("Validiating licenseChecker.settings...\n");
 		String json = Files.asCharSource(file, Charset.defaultCharset()).read();
-		Gson gson = new Gson();
+		Gson gson = new GsonBuilder().registerTypeAdapter(HeaderFlag.class, HeaderFlag.DESERIALIZER).create();
 		CheckerSettings settings = gson.fromJson(json, CheckerSettings.class);
 		settings.validate();
-		System.out.println("Licenses.json looks good\n");
+		System.out.println("licenseChecker.settings looks good\n");
 		System.out.println("Found the following extensions: ");
 		System.out.println(Arrays.toString(settings.getExtensions()) + "\n");
 		return settings;
+	}
+	
+	public static final byte[] getLicense(String extension) {
+		return LICENSES.get(extension);
+	}
+
+	public static final boolean isSilentlySkipping() {
+		return silentSkips;
+	}
+
+	public static final boolean isSilentlyIgnoring() {
+		return silentIgnores;
+	}
+
+	public static final boolean isApplyingLicenses() {
+		return applyLicenses;
+	}
+
+	public static final boolean isStrippingLicenses() {
+		return stripLicenses;
+	}
+
+	public static final CheckerPhase getPhase() {
+		return PHASE;
+	}
+	
+	private static void setPhase(CheckerPhase phase) {
+		PHASE = phase;
 	}
 	
 }
