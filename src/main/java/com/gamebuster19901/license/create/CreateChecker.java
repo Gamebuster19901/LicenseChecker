@@ -19,12 +19,13 @@ package com.gamebuster19901.license.create;
 
 import java.util.Scanner;
 
+import com.gamebuster19901.license.flags.HeaderFlag;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 
 public class CreateChecker {
 
-	static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
+	static final Gson GSON = new GsonBuilder().setPrettyPrinting().registerTypeAdapter(HeaderFlag.class, HeaderFlag.DESERIALIZER).create();
 	
 	static CheckerSettings checkerSettings = new CheckerSettings();
 	

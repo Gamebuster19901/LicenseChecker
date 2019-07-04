@@ -15,19 +15,18 @@
  *
  */
 
-package com.gamebuster19901.license.create;
+package com.gamebuster19901.license;
 
-public enum HeaderMode {
-	APPEND,
-	JSON,
-	FILE,
-	STRING;
-	
-	public boolean mututallyExclusive(HeaderMode mode) {
-		return
-			this == APPEND && mode == JSON ||
-			this == JSON && mode == APPEND ||
-			this == FILE && mode == STRING ||
-			this == STRING && mode == FILE;
-	}
+public enum CheckerPhase {
+	UNINITIALIZED,
+	INITIALIZING,
+	INITIALIZED,
+	FINDING_SETTINGS,
+	VALIDATING_SETTINGS,
+	GETTING_HEADERS,
+	CHECKING_HEADERS,
+	APPLYING_HEADERS,
+	STRIPPING_HEADERS,
+	FAILED,
+	SUCCESS;
 }

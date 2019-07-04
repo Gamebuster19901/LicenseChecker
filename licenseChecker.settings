@@ -2,19 +2,24 @@
   "extensions": {
     ".java": "license.javaheader"
   },
-  "modes": {
+  "flags": {
     ".java": {
-      "modes": [
-        "FILE"
+      "flags": [
+        {
+          "name": "file"
+        },
+        {
+          "name": "append"
+        }
       ]
     }
   },
   "excludePaths": [
     ".gradle",
-    "./gradle",
+    "./settings",
     ".git",
     "./build",
     "./bin",
-    ".settings"
+    "./gradle"
   ]
 }

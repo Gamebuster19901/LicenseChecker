@@ -28,17 +28,20 @@ import java.util.HashSet;
 import java.util.Map.Entry;
 
 import com.gamebuster19901.license.NotFileException;
+import com.gamebuster19901.license.flags.FileFlag;
+import com.gamebuster19901.license.flags.HeaderFlag;
+import com.gamebuster19901.license.flags.HeaderFlags;
 
 public final class CheckerSettings {
 	
 	private HashMap<String, String> extensions = new HashMap<String, String>();
-	private HashMap<String, HeaderModes> modes = new HashMap<String, HeaderModes>();
+	private HashMap<String, HeaderFlags> flags = new HashMap<String, HeaderFlags>();
 	private HashSet<String> excludePaths = new HashSet<String>();
 	
 	transient final File CURRENT_DIRECTORY; 
 	transient String currentExtension = null;
 	transient String currentMessage = null;
-	transient HeaderModes currentMode = null;
+	transient HeaderFlags currentMode = null;
 	
 	{
 		try {
@@ -62,7 +65,7 @@ public final class CheckerSettings {
 					throw new IllegalArgumentException(extension + " already exists!");
 				}
 				currentExtension = extension;
-				currentMode = new HeaderModes();
+				currentMode = new HeaderFlags();
 				return;
 			}
 			throw new IllegalArgumentException("Extensions must begin with '.'");
@@ -77,6 +80,7 @@ public final class CheckerSettings {
 			System.out.println(extension + " doesn't exist, can't remove");
 		}
 		else {
+			flags.remove(extension);
 			System.out.println("removed " + extension);
 		}
 	}
@@ -122,7 +126,7 @@ public final class CheckerSettings {
 		else {
 			currentMessage = currentMessage.trim();
 			extensions.put(currentExtension, currentMessage);
-			modes.put(currentExtension, currentMode);
+			flags.put(currentExtension, currentMode);
 			clear();
 		}
 	}
@@ -147,8 +151,8 @@ public final class CheckerSettings {
 		return extensions.get(extension);
 	}
 	
-	public HeaderModes getMode(String extension) {
-		return modes.get(extension);
+	public HeaderFlags getMode(String extension) {
+		return flags.get(extension);
 	}
 	
 	public String[] getMessages() {
@@ -171,10 +175,10 @@ public final class CheckerSettings {
 		if(extensions.isEmpty()) {
 			throw new IllegalStateException("no extensions specified in checker");
 		}
-		if(modes.isEmpty()) {
+		if(flags.isEmpty()) {
 			throw new IllegalStateException("no modes specified in checker");
 		}
-		if(extensions.size() != modes.size()) {
+		if(extensions.size() != flags.size()) {
 			throw new IllegalStateException("extensions.size() != modes.size()");
 		}
 		if(currentExtension != null || currentMessage != null || currentMode != null) {
@@ -185,15 +189,18 @@ public final class CheckerSettings {
 			if(!s.startsWith(".")) {
 				throw new IllegalStateException("Extension '" + s + "' does not start with '.'");
 			}
-			if(modes.get(s) == null) {
+			if(flags.get(s) == null) {
 				throw new NullPointerException("Mode for '" + s + "' is null");
 			}
 		}
 		
-		for(Entry<String, HeaderModes> entry: modes.entrySet()) {
-			HeaderModes mode = entry.getValue();
+		for(Entry<String, HeaderFlags> entry: flags.entrySet()) {
+			HeaderFlags mode = entry.getValue();
 			mode.validate();
-			if(mode.is(HeaderMode.FILE)) {
+			for(HeaderFlag flag : mode) {
+				flag.validate(this, entry.getKey(), extensions.get(entry.getKey()));
+			}
+			if(mode.is(FileFlag.class)) {
 				File f = new File(extensions.get(entry.getKey()));
 				if(!f.exists()) {
 					throw new FileNotFoundException("Could not find license file for extension " + entry.getKey() + "\n\n" + f.getAbsolutePath());
