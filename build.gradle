@@ -65,6 +65,12 @@ task stripLicenses(type:JavaExec){
     args = ['notBinary', 'stripLicenses']
 }
 
+task licenseTest(type:JavaExec){
+    classpath += sourceSets.main.runtimeClasspath
+    println main = "com.gamebuster19901.license.LicenseChecker"
+    args = ['notBinary', "classes:com.gamebuster19901.license.test.Test"]
+}
+
 editLicenses.dependsOn stripLicenses
 
 

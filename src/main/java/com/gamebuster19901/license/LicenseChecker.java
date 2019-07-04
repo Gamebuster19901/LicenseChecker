@@ -20,6 +20,7 @@ package com.gamebuster19901.license;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.lang.reflect.Method;
 import java.nio.charset.Charset;
 import java.nio.file.Paths;
 import java.util.Arrays;
@@ -54,34 +55,45 @@ public final class LicenseChecker {
 	
 	public static void main(String[] args) {
 		setPhase(INITIALIZING);
-		for(String s : args) {
-			if(s.equalsIgnoreCase("silenceSkips")){
-				silentSkips = true;
-			}
-			else if (s.equalsIgnoreCase("silenceIgnores")) {
-				silentIgnores = true;
-			}
-			else if(s.startsWith("path:")) {
-				path = s.substring(s.indexOf("path:"), s.length());
-			}
-			else if (s.equalsIgnoreCase("applyLicenses")) {
-				applyLicenses = true;
-			}
-			else if (s.equalsIgnoreCase("stripLicenses")) {
-				stripLicenses = true;
-			}
-			else if (s.equalsIgnoreCase("notBinary")) {
-				path = new File(new File(".").getAbsolutePath()).getParentFile().getAbsolutePath();
-			}
-			else if (s.startsWith("path:")) {
-				path = s.substring(s.indexOf("path:"));
-			}
-			if(applyLicenses && stripLicenses) {
-				throw new IllegalStateException("Cannot both apply and strip licenses at the same time!");
-			}
-		}
-		setPhase(INITIALIZED);
 		try {
+			for(String s : args) {
+				if(s.equalsIgnoreCase("silenceSkips")){
+					silentSkips = true;
+				}
+				else if (s.equalsIgnoreCase("silenceIgnores")) {
+					silentIgnores = true;
+				}
+				else if(s.startsWith("path:")) {
+					path = s.substring(s.indexOf("path:"), s.length());
+				}
+				else if (s.equalsIgnoreCase("applyLicenses")) {
+					applyLicenses = true;
+				}
+				else if (s.equalsIgnoreCase("stripLicenses")) {
+					stripLicenses = true;
+				}
+				else if (s.equalsIgnoreCase("notBinary")) {
+					path = new File(new File(".").getAbsolutePath()).getParentFile().getAbsolutePath();
+				}
+				else if (s.startsWith("path:")) {
+					path = s.substring(s.indexOf("path:"));
+				}
+				else if (s.startsWith("classes:")) {
+					String classList = s.replace("classes:", "");
+					String[] classes = classList.split(",");
+					for(String className : classes) {
+						LicenseChecker.class.getClassLoader().setPackageAssertionStatus(className.substring(0, className.lastIndexOf('.')), true);
+						Class clazz = Class.forName(className);
+						Method main = clazz.getDeclaredMethod("main", String[].class);
+						main.setAccessible(true);
+						main.invoke(null, (Object)args);
+					}
+				}
+				if(applyLicenses && stripLicenses) {
+					throw new IllegalStateException("Cannot both apply and strip licenses at the same time!");
+				}
+			}
+			setPhase(INITIALIZED);
 			String path = Paths.get(LicenseChecker.class.getProtectionDomain().getCodeSource().getLocation().toURI()).toString();
 			File dir = new File(path);
 			path = dir.getParent();
