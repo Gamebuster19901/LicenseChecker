@@ -65,8 +65,6 @@ task stripLicenses(type:JavaExec){
     args = ['notBinary', 'stripLicenses']
 }
 
-editLicenses.dependsOn stripLicenses
-
 
 test {
     exclude '**/*'
