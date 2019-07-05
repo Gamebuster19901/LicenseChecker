@@ -16,9 +16,6 @@ before_install: chmod +x gradlew
 
 jobs:
   include:
-    state: Test
-    script:
-      - ./gradlew licenseTest
     stage: Build
     script:
       - ./gradlew build
