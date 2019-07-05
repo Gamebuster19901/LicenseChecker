@@ -24,7 +24,6 @@ import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.Collections;
 
-import com.gamebuster19901.license.JsonFlag;
 import com.gamebuster19901.license.create.CheckerSettings;
 import com.google.common.io.Files;
 import com.google.gson.JsonDeserializationContext;
