@@ -15,12 +15,12 @@
  *
  */
 
-package com.gamebuster19901.license;
+package com.gamebuster19901.license.flags;
 
 import java.io.File;
 
+import com.gamebuster19901.license.LicenseChecker;
 import com.gamebuster19901.license.create.CheckerSettings;
-import com.gamebuster19901.license.flags.HeaderFlag;
 import com.google.common.io.Files;
 
 public class JsonFlag extends HeaderFlag.DataTypeFlag{
