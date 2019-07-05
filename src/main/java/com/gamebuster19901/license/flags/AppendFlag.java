@@ -48,4 +48,14 @@ public class AppendFlag extends HeaderFlag.DataTypeFlag{
 
 	@Override
 	public void validate(CheckerSettings settings, String extension, String value) throws Exception {}
+
+	@Override
+	public void strip(File f) throws Exception {
+		byte[] fileBytes = new byte[(int) f.length()]; 
+		Files.asByteSource(f).openStream().read(fileBytes, 0, (int)f.length());
+		String fileText = new String(fileBytes);
+		String license = new String(LicenseChecker.getLicense(getExtension(f)));
+		String strippedFile = fileText.substring(license.length());
+		Files.asByteSink(f).openStream().write(strippedFile.getBytes());
+	}
 }

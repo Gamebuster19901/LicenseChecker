@@ -249,12 +249,12 @@ public final class LicenseChecker {
 				case PASSED:
 					totalStrippings++;
 					try {
-						byte[] fileBytes = new byte[(int) f.length()]; 
-						Files.asByteSource(f).openStream().read(fileBytes, 0, (int)f.length());
-						String fileText = new String(fileBytes);
-						String license = new String(LICENSES.get(getExtension(f)));
-						String strippedFile = fileText.substring(license.length());
-						Files.asByteSink(f).openStream().write(strippedFile.getBytes());
+						HeaderFlags flags = settings.getMode(getExtension(f));
+						for(HeaderFlag flag : flags) {
+							if(flag instanceof HeaderFlag.DataTypeFlag) {
+								((HeaderFlag.DataTypeFlag) flag).strip(f);
+							}
+						}
 						System.out.println("Stripped " + f);
 					}
 					catch(Exception e) {

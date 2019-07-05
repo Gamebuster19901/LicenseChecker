@@ -68,6 +68,7 @@ public abstract class HeaderFlag implements Comparable{
 		}
 		
 		public abstract void apply(File f) throws Exception;
+		public abstract void strip(File f) throws Exception;
 		
 	}
 	

@@ -39,21 +39,35 @@ public class JsonFlag extends HeaderFlag.DataTypeFlag{
 		headerBytes = LicenseChecker.getLicense(extension);
 		fileBytes = new byte[headerBytes.length + (int)f.length()];
 		
+		Files.asByteSource(f).openStream().read(fileBytes, headerBytes.length, (int)f.length());
+		
 		if(fileBytes.length < 2) {
 			fileBytes = new byte[2];
 			System.err.println("The file output was less than 2 bytes, a JSON file must be at least 2 bytes, manually setting the length to 2!\n");
 		}
 		fileBytes[0] = '{';
-		fileBytes[1] = '\n';
-		for(int i = 2; i < headerBytes.length; i++) {
+		int i = 1;
+		for(; i < headerBytes.length; i++) {
 			fileBytes[i] = headerBytes[i];
 		}
+		fileBytes[i] = '\n';
 		
-		Files.asByteSource(f).openStream().read(fileBytes, headerBytes.length, (int)f.length());
 		Files.asByteSink(f).write(fileBytes);
 	}
 
 	@Override
 	public void validate(CheckerSettings settings, String extension, String value) throws Exception {}
+
+	@Override
+	public void strip(File f) throws Exception {
+		byte[] fileBytes = new byte[(int) f.length()]; 
+		Files.asByteSource(f).openStream().read(fileBytes, 0, (int)f.length());
+		String fileText = new String(fileBytes);
+		String license = new String(LicenseChecker.getLicense(getExtension(f)));
+		String strippedFile = fileText.substring(license.length()).trim();
+		strippedFile = "{\n\t" + strippedFile;
+		
+		Files.asByteSink(f).openStream().write(strippedFile.getBytes());
+	}
 	
 }
