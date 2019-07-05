@@ -33,7 +33,6 @@ import static com.gamebuster19901.license.flags.HeaderFlag.*;
 import static com.gamebuster19901.license.CheckStatus.*;
 
 import com.gamebuster19901.license.create.CheckerSettings;
-import com.gamebuster19901.license.flags.AppendFlag;
 import com.gamebuster19901.license.flags.HeaderFlag;
 import com.gamebuster19901.license.flags.HeaderFlags;
 import com.gamebuster19901.license.flags.HeaderFlag.LocationFlag;
@@ -224,8 +223,8 @@ public final class LicenseChecker {
 				HeaderFlags flags = settings.getMode(extension);
 				System.out.println("adding license header to " + f);
 				for(HeaderFlag flag : flags) {
-					if(flag instanceof AppendFlag) {
-						((AppendFlag) flag).apply(f);
+					if(flag instanceof HeaderFlag.DataTypeFlag) {
+						((DataTypeFlag) flag).apply(f);
 					}
 				}
 				iterator.remove();
