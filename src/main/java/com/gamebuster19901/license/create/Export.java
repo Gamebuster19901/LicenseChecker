@@ -18,7 +18,7 @@
 package com.gamebuster19901.license.create;
 
 import java.io.File;
-import java.net.URISyntaxException;
+import java.io.IOException;
 import java.nio.charset.Charset;
 
 import com.google.common.io.FileWriteMode;
@@ -29,9 +29,9 @@ public class Export extends Command{
 	public static final File EXPORT_LOCATION;
 	static{
 		try {
-			EXPORT_LOCATION = new File(new File(Export.class.getProtectionDomain().getCodeSource().getLocation().toURI()).getParent().toString() + "/licenseChecker.settings");
-		} catch (URISyntaxException e) {
-			throw new AssertionError(e);
+			EXPORT_LOCATION = new File(new File(new File(".").getAbsolutePath()).getParentFile().getCanonicalPath() + "/licenseChecker.settings");
+		} catch (IOException e) {
+			throw new RuntimeException(e);
 		}
 	}
 	
