@@ -191,12 +191,12 @@ public final class LicenseChecker {
 					break;
 				case IGNORED:
 					if(!silentIgnores) {
-						System.out.println("Ignoring excluded file " + f);
+						System.out.println("Ignoring file " + f);
 					}
 					break;
 				case SKIPPED:
 					if(!silentSkips) {
-						System.out.println("Skipping " + f);
+						System.out.println("Skipping excluded file " + f);
 					}
 					break;
 				default:
