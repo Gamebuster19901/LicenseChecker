@@ -131,6 +131,10 @@ public final class LicenseChecker {
 				}
 			}
 			else {
+				if(stripLicenses) {
+					System.out.println("Did not strip licenses, no licenseChecker.settings");
+					System.exit(0);
+				}
 				throw new LicenseException(licensesJSON, new FileNotFoundException(licensesJSON.getCanonicalPath()));
 			}
 		}
