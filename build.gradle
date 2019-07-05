@@ -41,7 +41,7 @@ dependencies {
 task checkLicenses(type: JavaExec) {
     classpath += sourceSets.main.runtimeClasspath
     println main = "com.gamebuster19901.license.LicenseChecker"
-    args = ['notBinary']
+    args = ['notBinary', "classes:com.gamebuster19901.license.test.Test"]
 }
 build.dependsOn checkLicenses
 
