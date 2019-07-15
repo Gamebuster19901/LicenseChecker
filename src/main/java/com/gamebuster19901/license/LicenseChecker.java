@@ -173,7 +173,7 @@ public final class LicenseChecker {
 		setPhase(CHECKING_HEADERS);
 		System.out.println("Checking for license violations in: " + path + "\n");
 		HashSet<File> badFiles = new HashSet<File>();
-		for(File f : Files.fileTreeTraverser().breadthFirstTraversal(dir)) {
+		for(File f : Files.fileTraverser().breadthFirst(dir)) {
 			CheckStatus status = getStatus(f, settings);
 			switch (status) {
 				case PASSED:
@@ -244,7 +244,7 @@ public final class LicenseChecker {
 		setPhase(STRIPPING_HEADERS);
 		HashMap<File, String> failedStrippings = new HashMap<File, String>();
 		int totalStrippings = 0;
-		for(File f : Files.fileTreeTraverser().breadthFirstTraversal(dir)) {
+		for(File f : Files.fileTraverser().breadthFirst(dir)) {
 			switch(getStatus(f, settings)) {
 				case PASSED:
 					totalStrippings++;
