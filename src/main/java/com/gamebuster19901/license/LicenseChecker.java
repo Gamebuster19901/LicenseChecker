@@ -52,7 +52,7 @@ public final class LicenseChecker {
 	private static final HashMap<String , byte[]> LICENSES = new HashMap<String, byte[]>();
 	private static CheckerPhase PHASE = UNINITIALIZED;
 	
-	public static void main(String[] args) {
+	public static void main(String[] args) throws InterruptedException {
 		setPhase(INITIALIZING);
 		try {
 			for(String s : args) {
@@ -138,12 +138,14 @@ public final class LicenseChecker {
 			}
 		}
 		catch(LicenseException e) {
+			Thread.sleep(1000);
 			System.err.println("Failed in phase: " + PHASE);
 			e.printStackTrace(System.err);
 			setPhase(CheckerPhase.FAILED);
 			System.exit(2);
 		}
 		catch(Throwable t) {
+			Thread.sleep(1000);
 			System.err.println("Failed in phase: " + PHASE);
 			t.printStackTrace(System.err);
 			setPhase(CheckerPhase.FAILED);
