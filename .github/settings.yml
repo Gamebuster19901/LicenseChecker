@@ -34,7 +34,7 @@ labels:
     -
         name: "Priority - Blocker  ⟰⊘⟰"
         color: "ff009d"
-        description: "This issue is so important it must be addressed immediately"
+        description: "This issue blocks development of this project or another project"
     -
         name: "Priority - Critical ⟰"
         color: "b60205"
