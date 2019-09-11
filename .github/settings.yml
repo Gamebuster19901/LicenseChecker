@@ -52,14 +52,6 @@ labels:
         color: "fffa00"
         description: "Normal priority"
     -
-        name: "Side - Client"
-        color: "cfd3d7"
-        description: "This issue is client side only"
-    -
-        name: "Side - Server"
-        color: "cfd3d7"
-        description: "This issue is server side only"
-    -
         name: "Status - Deferred"
         color: "ee0701"
         description: "This issue was transferred to (or is awaiting a fix from) another project"
