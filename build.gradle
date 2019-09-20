@@ -18,6 +18,9 @@ buildscript{
 // Apply the java-library plugin to add support for Java Library
 apply plugin: 'java-library'
 apply plugin: 'eclipse'
+apply plugin: 'maven-publish'
+
+group = 'com.gamebuster19901'
 
 // In this section you declare where to find the dependencies of your project
 repositories {
@@ -44,6 +47,7 @@ task checkLicenses(type: JavaExec) {
     args = ['notBinary', "classes:com.gamebuster19901.license.test.Test"]
 }
 build.dependsOn checkLicenses
+build.finalizedBy publish
 
 task applyLicenses(type: JavaExec) {
     classpath += sourceSets.main.runtimeClasspath
@@ -70,3 +74,18 @@ test {
     exclude '**/*'
 }
 
+// Example configuration to allow publishing using the maven-publish task
+publishing {
+	publications {
+		LicenseChecker(MavenPublication) {
+			groupId 'com.gamebuster19901'
+			artifactId 'LicenseChecker'
+			version '1.0.0.0'
+			
+			from components.java
+		}
+	}
+	repositories {
+		mavenLocal()
+	}
+}
